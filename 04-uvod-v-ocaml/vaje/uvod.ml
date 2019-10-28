@@ -8,8 +8,10 @@
  - : int = 4
 [*----------------------------------------------------------------------------*)
 
-let rec square = ()
+let square x = x*x;; (*tole ;;, da ve, da mora to pognat *)
 
+square 2;; 
+  
 (*----------------------------------------------------------------------------*]
  Funkcija [middle_of_triple] vrne srednji element trojice.
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,7 +19,13 @@ let rec square = ()
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
-let rec middle_of_triple = ()
+(* let rec middle_of_triple x, y, z = y;; (* dela tako z (x, y, z), kot x, y, z *) *)
+
+let middle_of_triple (_, b, _) = b
+let middle_of_triple x =
+  let (_,b,_) = x
+  in b (*funkcija sprejme tuple*)
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [starting_element] vrne prvi element danega seznama. V primeru
@@ -27,7 +35,26 @@ let rec middle_of_triple = ()
  - : int = 1
 [*----------------------------------------------------------------------------*)
 
-let rec starting_element = ()
+let starting_element seznam = function
+  | [] -> failwith "ERROR"
+  | x :: _ -> x (*seznam odpakiramo: vzamemo prvi element in kar ostane(xs ponavadi označmo x :: xs, ampak ker tega xs dela ne rabmo, kar _) *)
+
+(*function pove, da je  to funkcija ene sprem. in je niti ne rabmo napisat, ampak jo razelimo na en mejni primer, ostalo pa tisto, kar funkcija v resnici naredi *)
+
+let starting_element' sez =
+  match sez with
+    | [] -> failwith "Ne bo šlo"
+    | x :: _ -> x  (*če vrstici s praznim seznamom in x zamenjam, bo vse vredu, ker se ne izključujeta niti ne prekivata, zato lahko naredim to spodaj  *)
+
+    let starting_element' sez =
+  match sez with
+    | x :: _ -> x 
+    | _ -> failwith "Ne bo šlo"
+
+    (*a = starting element [1;2;3] bo a int 4
+    če pa b = starting element 12345 pa bo reku ocaml, da gre to za funkcijo iz seznama v seznam (sam ugotovi) in te opomni, da ne gre, ker rabi seznam za argument
+    ne sme biti nekompatibilnosti med spremenljivkami, ki jih def in uporabljaš
+    ocaml nam ne pusti napačnih stvari notr dajat- napačnih tipov npr*)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [multiply] zmnoži vse elemente seznama. V primeru praznega seznama
@@ -37,7 +64,9 @@ let rec starting_element = ()
  - : int = 48
 [*----------------------------------------------------------------------------*)
 
-let rec multiply = ()
+let rec multiply = function
+  | [] -> 1
+  | x :: xs -> x * multiply xs
 
 (*----------------------------------------------------------------------------*]
  Napišite funkcijo ekvivalentno python kodi:
@@ -54,7 +83,9 @@ let rec multiply = ()
  - : int list = [-1; 7; 0]
 [*----------------------------------------------------------------------------*)
 
-let rec sum_int_pairs = ()
+let rec sum_int_pairs = function
+  | [] -> []
+  |(x, y) :: xys  -> x + y :: sum_int_pairs xys (*če daš [x, y] je to isto kot ([x, y]) in ti vzame, kot da seznam razpakira v dva seznama*))
 
 (*----------------------------------------------------------------------------*]
  Funkcija [get k list] poišče [k]-ti element v seznamu [list]. Številčenje
@@ -65,7 +96,14 @@ let rec sum_int_pairs = ()
  - : int = 1
 [*----------------------------------------------------------------------------*)
 
-let rec get = ()
+let rec get k = function
+  | [] -> failwith "Index out of range"
+  | x :: xs when k = 0 -> x
+  | x :: xs -> get (k - 1) xs
+
+let rec get k = function
+  | [] -> failwith "Index out of range"
+  | x :: xs -> if (k = 0) then x else get (k-1) xs (* xs je še en argument. ki ti ga function implicitno vzame *)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [double] podvoji pojavitve elementov v seznamu.
@@ -74,8 +112,10 @@ let rec get = ()
  - : int list = [1; 1; 2; 2; 3; 3]
 [*----------------------------------------------------------------------------*)
 
-let rec double = ()
-
+let rec double = function
+  | [] -> []
+  | x :: xs -> x :: x :: double xs (*sez je lahk al prazen al pa take oblike x :: xs ;; = x :: (x :: double xs)*)
+  | x :: xs -> [x;x] @ double xs
 (*----------------------------------------------------------------------------*]
  Funkcija [insert x k list] na [k]-to mesto seznama [list] vrine element [x].
  Če je [k] izven mej seznama, ga funkcija doda na začetek oziroma na konec.
@@ -86,7 +126,12 @@ let rec double = ()
  - : int list = [1; 0; 0; 0; 0; 0]
 [*----------------------------------------------------------------------------*)
 
-let rec insert = ()
+let rec insert x k sez =
+  if k = 0 then
+    x :: sez
+  else
+    match sez with
+      | y :: ys -> x :: insert x (k-1) ys
 
 (*----------------------------------------------------------------------------*]
  Funkcija [divide k list] seznam razdeli na dva seznama. Prvi vsebuje prvih [k]
@@ -99,7 +144,16 @@ let rec insert = ()
  - : int list * int list = ([1; 2; 3; 4; 5], [])
 [*----------------------------------------------------------------------------*)
 
-let rec divide = ()
+let rec divide k sez =
+   if k <= 0 then 
+   ([], sez)
+   else 
+    match sez with
+    | x :: xs -> 
+      let (prej, potem) = divide (k - 1) xs in
+      (x :: prej, potem)
+    | [] -> ([], [])
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [rotate n list] seznam zavrti za [n] mest v levo. Predpostavimo, da
