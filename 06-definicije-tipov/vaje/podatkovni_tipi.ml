@@ -1,10 +1,22 @@
 (* ========== Vaja 3: Definicije Tipov  ========== *)
 
+let rec reverse list =
+  let rec reverse' list acc =
+    match list with
+    | [] -> acc
+    | x :: xs -> reverse' xs (x :: acc)
+  in
+  reverse' list []
+
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Pri modeliranju denarja ponavadi uporabljamo racionalna števila. Problemi se
  pojavijo, ko uvedemo različne valute.
  Oglejmo si dva pristopa k izboljšavi varnosti pri uporabi valut.
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
+
+type euro = Euro of float
+type dollar = Dollar of float
+(*tip vsote razpakiraš in delaš na vsaki stvari posebej*)
 
 (*----------------------------------------------------------------------------*]
  Definirajte tipa [euro] in [dollar], kjer ima vsak od tipov zgolj en
@@ -21,7 +33,10 @@
  - : euro = Euro 0.4305
 [*----------------------------------------------------------------------------*)
 
+let dollar_to_euro_ration = 1.0 /. 1.10 (* !!! PAZI !!! (deljeno); konstante prej definiraj in jih ne piši kar tako v funkcijo *)
 
+let dollar_to_euro (Dollar d) = Euro (d *. dollar_to_euro_ration) (*v ocamlu razpakiramo nov tip Dollar x, vne x. Mi hočemo funkcijo, i gre iz tipa dollar v tip euro *)
+let euro_to_dollar (Euro e) = Dollar (e /. dollar_to_euro_ration) (*lepo je, če imaš dollar d in euro e, da atribut malo povezan z tipom *)
 
 (*----------------------------------------------------------------------------*]
  Definirajte tip [currency] kot en vsotni tip z konstruktorji za jen, funt
@@ -35,8 +50,16 @@
  - : currency = Pound 0.007
 [*----------------------------------------------------------------------------*)
 
+type currency =
+  | Yen of float (*jota 1*)
+  | Pound of float (*jota 2*)
+  | Crown of float (*jota 3*)
 
-
+let to_pound c = match c with
+  | Crown cr -> Pound (cr *. 0.3)  (*lahk imamo function ali pa damo argument*)
+  | Yen y -> Pound (y *. 0.9) (*jo že takoj kot seznam razpakiram*)
+  | Pound p -> Pound p
+  
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Želimo uporabljati sezname, ki hranijo tako cela števila kot tudi logične
  vrednosti. To bi lahko rešili tako da uvedemo nov tip, ki predstavlja celo
@@ -57,22 +80,47 @@
  Nato napišite testni primer, ki bi predstavljal "[5; true; false; 7]".
 [*----------------------------------------------------------------------------*)
 
+type intbool_list = 
+  | Nil
+  | Int of int * intbool_list (*rekurzivno:int je na prvem mestu in pol naprej seznam, lahk pa je bool na prvem mestu in pol seznam (ga rekurzivno def, tako kot običajen seznam - glava + ostalo*)
+  | Bool of bool * intbool_list
 
-
+let primer = Int (5, Bool(true, Bool(false, Int(7, Nil))))
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_map f_int f_bool ib_list] preslika vrednosti [ib_list] v nov
  [intbool_list] seznam, kjer na elementih uporabi primerno od funkcij [f_int]
  oz. [f_bool].
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_map = ()
+let rec intbool_map_rep f_int f_bool ib_list =
+  let rec intbool_map_rep' f_int f_bool ib_list acc =
+  match ib_list with
+    | Nil -> reverse acc
+    | Int (i, is) -> intbool_map_rep' f_int f_bool is (f_int i :: acc) (*ne dela, če napišeš Int i, is; mporaš dati v oklepaj Int (i, is)*)
+    | Bool (b, bs) -> intbool_map_rep' f_int f_bool bs (f_bool b :: acc)
+  in
+  intbool_map_rep' f_int f_bool ib_list []
+
+
+  let rec intbool_map f_int f_bool = function (*zadnji argument, torej list v tem primeru, bo funkcija vzela implicitno in ga bo matchala kar takoj*)
+    | Nil -> Nil
+    | Int (x, xs) -> Int (f_int x, intbool_map f_int f_bool xs)
+    | Bool (b, bs) -> Bool (f_bool b, intbool_map f_int f_bool bs)
+
+(*funkcije sta drugačnmega tipa, POGLEJ !!! morda prvi ni prav, ker hočemo dobiti v kodomeni tipe inboola !!!*)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_reverse] obrne vrstni red elementov [intbool_list] seznama.
  Funkcija je repno rekurzivna.
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_reverse = ()
+let rec intbool_reverse ib_list = (*tukaj ni function, ker še nekaj definiraš prej, ne matchas direkt !!! *)
+  let rec intbool_reverse' acc = function
+    | Nil -> acc
+    | Int (i, is) -> intbool_reverse' (Int (i, acc)) is (*tukaj daj is kot argument, ga kar napiši, ker se je ta implicitnoi spremenil*)
+    | Bool (b, bs) -> intbool_reverse' (Bool (b, acc)) bs
+  in
+  intbool_reverse' Nil ib_list (*ne bo delal s [] !!!*)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_separate ib_list] loči vrednosti [ib_list] v par [list]
@@ -88,6 +136,8 @@ let rec intbool_separate = ()
  pregledno hranjenje podatkov.
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
 
+
+
 (*----------------------------------------------------------------------------*]
  Čarodeje razvrščamo glede na vrsto magije, ki se ji posvečajo. Definirajte tip
  [magic], ki loči med magijo ognja, magijo ledu in magijo arkane oz. fire,
@@ -98,7 +148,11 @@ let rec intbool_separate = ()
  [specialisation], ki loči med temi zaposlitvami.
 [*----------------------------------------------------------------------------*)
 
+type boool = TTrue | FFalse
 
+type magic = Fire | Frost | Arcane
+type specialisation = Historian | Teacher | Researcher
+(*nimajo nobenih dodatnih informacij*)
 
 (*----------------------------------------------------------------------------*]
  Vsak od čarodejev začne kot začetnik, nato na neki točki postane študent,
@@ -115,7 +169,12 @@ let rec intbool_separate = ()
  - : wizard = {name = "Matija"; status = Employed (Fire, Teacher)}
 [*----------------------------------------------------------------------------*)
 
+type status =
+  | Newbie
+  | Student of magic * int
+  | Employed of magic * specialisation
 
+type wizard = {ime: string; status: status}
 
 (*----------------------------------------------------------------------------*]
  Želimo prešteti koliko uporabnikov posamezne od vrst magije imamo na akademiji.
@@ -128,7 +187,19 @@ let rec intbool_separate = ()
  - : magic_counter = {fire = 1; frost = 1; arcane = 2}
 [*----------------------------------------------------------------------------*)
 
+type magic_counter = {fire: int ; frost: int ; arcane: int}
 
+(*let update counter magic_type = counter.fire (*vrne int pri fire*) *)
+
+let update counter magic_type = function
+  | Fire -> {fire = counter.fire + 1 ; frost = counter.frost ; arcane = counter.arcane}
+  | Fire -> {fire = counter.fire + 1} (*vzem sam counter pa mu sam tole posodob pa ostalo pust - lažje*)
+
+let update ({fire = fire2 ; frost ; arcane} as counter) = function (*kar je mel magic caunter za fore, si jo shranim v spremenljicko fire2*)
+  |Fire -> {counter with fire = fire2}
+  |Frost -> {counter with frost = frost + 1}
+  |Arcane -> {counter with arcane = arcane + 1}
+  (*zdaj imam tu vse spremenljivke že v začetku shranjene, ampak problem, ker pol counter ni definiran, zato v as counter? oklepaji?*) 
 
 (*----------------------------------------------------------------------------*]
  Funkcija [count_magic] sprejme seznam čarodejev in vrne števec uporabnikov
@@ -138,7 +209,15 @@ let rec intbool_separate = ()
  - : magic_counter = {fire = 3; frost = 0; arcane = 0}
 [*----------------------------------------------------------------------------*)
 
-let rec count_magic = ()
+let rec count_magic lst=  (*nrdi neki za enga čarovnika in za staro stanje*)
+  let folder counter {status} = (*ime spustimo, ker na sne zanima*)
+    match status with
+      | Newbie -> counter
+      | Studebt (magic, _) -> update counter magic
+      | Employed (magic, _) -> update counter magic
+in
+list.fold_left folder {fire=0 ; frost=0 ; arcane =0} lst
+(*rekurzivno bi si morali acc ročno nosit argument s sabo, tu pa fold to dela namesto mene*)
 
 (*----------------------------------------------------------------------------*]
  Želimo poiskati primernega kandidata za delovni razpis. Študent lahko postane
