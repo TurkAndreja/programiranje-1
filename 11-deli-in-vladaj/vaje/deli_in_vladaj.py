@@ -27,6 +27,29 @@
 #     [10, 2, 0, 4, 11, 15, 17, 5, 18]
 ###############################################################################
 
+def pivot(a, start, end): #delamo samo na delčku tabele a = table[start: end + 1]
+
+    pivot = a[start]
+    left_i = start #start + 0
+    right_i = end #start + end
+    
+    #prestavlamo vse razen pivota, ta ostane na prvem mestu, potem pa samo zamenjamo sredino z pivotom?
+    while left_i < right_i: #tuki pazi, ne =!, ker se lahko v enem krogu dvakrat premakne in zamudiš enakost, ker gresta drg čez druzga
+        if a[left_i + 1] < pivot:
+            left_i += 1
+        elif a[right_i] >= pivot:
+            right_i -= 1
+        else: 
+            a[left_i + 1], a[right_i] = a[right_i], a[left_i + 1] #ju ne zmanjšamo in bo šel še enkrat pogledat, če je zdej vredu
+            #zdej pa še pivot na začetku damo v sredo z zamenjavo
+            #če nista enaka vzamemo desnega ?
+
+    a[start] = a[right_i] 
+    a[right_i] = pivot
+
+    return right_i
+
+    #ful je pomembno, da pivot dobro izberemo. zdaj seznam še ni urejen. delili ga bomo na polovice in vsako pivotirali. pivot na polovicah izbiramo naključno
 
 
 ###############################################################################
@@ -44,6 +67,17 @@
 # jo rešite brez da v celoti uredite tabelo [a].
 ###############################################################################
 
+def kth_element(a, k, start = 0, end = None):
+    if end is None:
+        end = len(a) - 1
+    x = pivot(a, start, end)
+    if x == k:
+        return a[x]
+    elif x > k:
+        return kth_element(a, k, start, x - 1)    
+    else:
+        return kth_element(a, (k - x), x + 1, end)
+    # moramo samo še en pogoj dopisat, da bo vedu, kdaj se ustavit + nekje je nek indeks narobe
 
 
 ###############################################################################
@@ -60,6 +94,19 @@
 #     [2, 3, 4, 5, 10, 11, 15, 17, 18]
 ###############################################################################
 
+def quicksort(a, start = 0, end = None):
+    if end is None:
+        end = len(a) - a
+    if start >= end:
+        return #nehamo
+    else:
+        x = pivot(a, start, end) #x je na pravem mestu, še levi in desni seznam od njega posortiramo
+        quicksort(a, start, x - 1)
+        quicksort(a, x + 1, end)
+
+    #quicksort =q(lower)
+    #quicksprt2 = q(upper)
+    # quicksort @ [x] @ quicksort2
 
 
 ###############################################################################
@@ -85,6 +132,32 @@
 #
 ###############################################################################
 
+def zlij(target, begin, end, list_1, list_2):
+
+    len1 = len(list_1)
+    len2 = len(list_2)
+    mesto1 = 0
+    mesto2 = 0
+
+    while mesto1 < len1 and mesto2 < len2: #dokler primerjamo 
+        if list_1[mesto1] < list_2[mesto2]:
+            target[begin + mesto1 + mesto2] = list_1[mesto1]
+            mesto1 += 1
+        else:
+            target[begin + mesto1 + mesto2] = list_2[mesto2]
+            mesto2 += 1
+    
+    while mesto1 < len1: #prvo izpraznemo
+        target[begin + mesto1 + mesto2] = list_1(mesto1)
+        mesto1 += 1
+
+    while mesto2 < len2: #še drugo izpraznimo
+        target[begin + mesto1 + mesto2] = list_2(mesto2)
+        mesto2 += 1
+
+    #v ocamlu si dam na vsakega od seznamov na koncu neskončnost, ki je večja od vseh in naredim primerjavo
+
+#vsako cifro pogledamo dvakrat => linearna časovna zahtevnost
 
 
 ###############################################################################
@@ -92,7 +165,7 @@
 # Tabelo razdelimo na polovici, ju rekurzivno uredimo in nato zlijemo z uporabo
 # funkcije [zlij].
 #
-# Namig: prazna tabela in tabela z enim samim elementom sta vedno urejeni.
+# Namig: prazna tabela in tabela z enim samim elementom sta vedno urejeni. !!!
 #
 # Napišite funkcijo [mergesort(a)], ki uredi tabelo [a] s pomočjo zlivanja.
 # Za razliko od hitrega urejanja tu tabele lahko kopirate, zlivanje pa je 
@@ -102,3 +175,21 @@
 # >>> mergesort(a)
 # [2, 3, 4, 5, 10, 11, 15, 17, 18]
 ###############################################################################
+
+def mergesort(a, start = 0, end = None):
+    #dolzina = len(a)
+    if end == None:
+        end= len(a)
+    #polovica = dolzina // 2
+
+    if len(a) > 1:
+        polovica = (start + end) // 2
+        mergesort(a, start, polovica)
+        mergesort(a, polovica, end)
+    pass
+
+
+
+
+
+#T(n) = n(pivotiram) + 2T(n/2)(grem levo in desno) + n(zlivanje) = log
