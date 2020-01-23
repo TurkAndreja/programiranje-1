@@ -163,7 +163,9 @@ let rec divide k sez =
  - : int list = [3; 4; 5; 1; 2]
 [*----------------------------------------------------------------------------*)
 
-let rec rotate = ()
+let rec rotate n sez = 
+  let prvih_n, ostalo = divide n sez in
+  ostalo @ prvih_n
 
 (*----------------------------------------------------------------------------*]
  Funkcija [remove x list] iz seznama izbriše vse pojavitve elementa [x].
@@ -171,8 +173,20 @@ let rec rotate = ()
  # remove 1 [1; 1; 2; 3; 1; 2; 3; 1; 1];;
  - : int list = [2; 3; 2; 3]
 [*----------------------------------------------------------------------------*)
+let rec obrni sez =
+  let rec obrni' acc = function
+  | [] -> acc
+  | x :: xs -> obrni' (x :: acc) xs
+  in obrni' [] sez
 
-let rec remove = ()
+
+let rec remove x sez = 
+  let rec remove' acc x = function
+  | [] -> obrni acc
+  | y :: ys when y is not x -> remove' (y :: acc) ys
+  | y :: ys -> remove' acc ys
+  in remove' [] x sez
+    
 
 (*----------------------------------------------------------------------------*]
  Funkcija [is_palindrome] za dani seznam ugotovi ali predstavlja palindrom.
